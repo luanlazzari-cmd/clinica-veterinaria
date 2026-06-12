@@ -1,8 +1,8 @@
 import { Animal } from "./Animal";
 
 export class Gato extends Animal {
-  ehCastrado: boolean;
-  pelagem: string;
+  private ehCastrado: boolean;
+  private pelagem: string;
 
   constructor(
     nome: string,
