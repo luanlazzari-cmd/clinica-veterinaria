@@ -1,76 +1,97 @@
+// 1. CORREÇÃO DE ARQUITETURA: Medicamento agora é uma classe normal e bem definida
+export class Medicamento {
+  private _nome: string;
+  private _tipo: string;
+  private _preco: number;
+  private _quantidade: number;
+  private _validade: string;
+
+  constructor(
+    nome: string,
+    tipo: string,
+    preco: number,
+    quantidade: number,
+    validade: string,
+  ) {
+    this._nome = nome;
+    this._tipo = tipo;
+    this._preco = preco;
+    this._quantidade = quantidade;
+    this._validade = validade;
+  }
+
+  // Getters e Setters para garantir o encapsulamento do Medicamento
+  get nome(): string {
+    return this._nome;
+  }
+  get tipo(): string {
+    return this._tipo;
+  }
+  get preco(): number {
+    return this._preco;
+  }
+  get validade(): string {
+    return this._validade;
+  }
+
+  get quantidade(): number {
+    return this._quantidade;
+  }
+  set quantidade(qtd: number) {
+    if (qtd < 0) throw new Error("A quantidade não pode ser negativa.");
+    this._quantidade = qtd;
+  }
+}
+
+// 2. CLASSE ESTOQUE REFATORADA
 export class Estoque {
-  static Medicamento = class {
-    nome: string;
-    tipo: string;
-    preco: number;
-    quantidade: number;
-    validade: string;
+  // Atributo privado para ninguém mexer direto na lista
+  private _itens: Medicamento[] = [];
 
-    constructor(
-      nome: string,
-      tipo: string,
-      preco: number,
-      quantidade: number,
-      validade: string
-    ) {
-      this.nome = nome;
-      this.tipo = tipo;
-      this.preco = preco;
-      this.quantidade = quantidade;
-      this.validade = validade;
-    }
-  };
+  // Reexportando para manter compatibilidade com a chamada 'new Estoque.Medicamento' feita no Main.ts
+  static Medicamento = Medicamento;
 
-  itens: InstanceType<typeof Estoque.Medicamento>[] = [];
-
-  adicionar(m: InstanceType<typeof Estoque.Medicamento>): void {
-    this.itens.push(m);
+  adicionar(m: Medicamento): void {
+    this._itens.push(m);
   }
 
   darBaixa(nomeMedicamento: string, qtd: number): boolean {
-    for (const m of this.itens) {
-      if (m.nome === nomeMedicamento) {
-        try {
-          if (m.quantidade < qtd) {
-            throw new Error("Estoque insuficiente");
-          }
-          m.quantidade -= qtd;
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
+    const m = this._itens.find((item) => item.nome === nomeMedicamento);
+
+    if (!m) return false;
+
+    // CORREÇÃO: Removido o try/catch inútil. Validação direta e limpa.
+    if (m.quantidade < qtd) {
+      return false; // Ou throw new Error("Estoque insuficiente"), mas mantivemos o retorno booleano original de forma limpa
     }
 
-    return false;
+    m.quantidade -= qtd;
+    return true;
   }
 
-  getItens(): InstanceType<typeof Estoque.Medicamento>[] {
-    return this.itens;
+  // CORREÇÃO DA PISTA 8: Retorna uma CÓPIA do array. Se alguém der .splice(0) lá fora,
+  // vai limpar a cópia, e o estoque real da clínica continuará intacto!
+  getItens(): Medicamento[] {
+    return [...this._itens];
   }
 
-  imprimirEstoque(): void {
-    console.log("===== ESTOQUE =====");
-    for (const m of this.itens) {
-      console.log(
-        m.nome +
-          " | " +
-          m.tipo +
-          " | Qtd: " +
-          m.quantidade +
-          " | Validade: " +
-          m.validade +
-          " | R$" +
-          m.preco
-      );
+  // Retorna os dados em formato de string, sem console.log interno
+  obterRelatorioEstoque(): string {
+    let relatorio = "===== ESTOQUE =====\n";
+    for (const m of this._itens) {
+      relatorio += `${m.nome} | ${m.tipo} | Qtd: ${m.quantidade} | Validade: ${m.validade} | R$${m.preco}\n`;
     }
+    return relatorio.trim();
   }
 
-  alertarEstoqueBaixo(): void {
-    for (const m of this.itens) {
+  // Retorna uma lista de strings com os alertas
+  verificarAlertasEstoqueBaixo(): string[] {
+    const alertas: string[] = [];
+    for (const m of this._itens) {
       if (m.quantidade < 5) {
-        console.log("ALERTA: estoque baixo para " + m.nome);
+        alertas.push(`ALERTA: estoque baixo para ${m.nome}`);
       }
     }
+    return alertas;
   }
 }

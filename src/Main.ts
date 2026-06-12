@@ -16,7 +16,7 @@ class Main {
       "51999990001",
       "carlos@clinica.com",
       "CRMV-1234",
-      "clinico"
+      "clinico",
     );
     const v2 = new Veterinario(
       "Dra. Ana",
@@ -24,13 +24,15 @@ class Main {
       "51999990002",
       "ana@clinica.com",
       "CRMV-5678",
-      "cirurgiao"
+      "cirurgiao",
     );
 
-    clinica.veterinarios.push(v1);
-    clinica.veterinarios.push(v2);
+    // CORREÇÃO: Usando métodos de cadastro em vez de dar push direto no array exposto
+    clinica.cadastrarVeterinario(v1);
+    clinica.cadastrarVeterinario(v2);
 
     // ---- Cadastro de animais ---------------------------------------------
+    // Ajustado para passar os tipos estritos ("grande" / "pequeno") exigidos pelo novo construtor
     const dog = new Cachorro(
       "Rex",
       3,
@@ -40,22 +42,23 @@ class Main {
       false,
       "João Silva",
       "51988880001",
-      "11122233344"
+      "11122233344",
     );
 
     const cat = new Gato(
       "Mimi",
       2,
       4.0,
-      true,
-      "curta",
+      true, // ehCastrado (boolean) vem primeiro
+      "curta", // pelagem (string)
       "Maria Souza",
       "51988880002",
-      "55566677788"
+      "55566677788",
     );
 
-    clinica.animais.push(dog);
-    clinica.animais.push(cat);
+    // CORREÇÃO: Usando método de cadastro
+    clinica.cadastrarAnimal(dog);
+    clinica.cadastrarAnimal(cat);
 
     // ---- Agendamento -----------------------------------------------------
     const c1 = clinica.agendarConsulta("Rex", "Dr. Carlos", new Date());
@@ -88,14 +91,20 @@ class Main {
       "antibiotico",
       25.0,
       4,
-      "2025-12-01"
+      "2025-12-01",
     );
     estoque.adicionar(med);
 
-    estoque.alertarEstoqueBaixo();
+    const alertas = estoque.verificarAlertasEstoqueBaixo();
+    alertas.forEach((alerta) => console.log(alerta));
 
-    estoque.getItens().splice(0);
-    console.log("Itens após clear externo: " + estoque.itens.length);
+    // CORREÇÃO: getItens() agora deve retornar uma cópia [...this.itens],
+    // impossibilitando que o código abaixo limpe o estoque real da clínica.
+    const itensExternos = estoque.getItens();
+    itensExternos.splice(0);
+    console.log(
+      "Itens após tentativa de clear externo: " + estoque.getItens().length,
+    );
 
     // ---- Relatórios ------------------------------------------------------
     clinica.gerarRelatorioConsultas();

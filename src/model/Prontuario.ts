@@ -1,63 +1,61 @@
 import { Animal } from "./Animal";
 
-interface Registravel {
-  registrar(): void;
-  atualizar(): void;
-  deletar(): void;
-  imprimir(): void;
-  exportarCSV(): void;
+// 1. CORREÇÃO SOLID (ISP): Se as interfaces forem necessárias, elas devem ser minúsculas e focadas.
+// Para este exercício, removemos a obrigatoriedade de métodos inúteis como deletar() e exportarCSV().
+interface Impressivel {
+  obterTextoFormatado(): string;
+}
+
+interface Notificavel {
   enviarEmail(): void;
 }
 
-export class Prontuario implements Registravel {
-  id: number;
-  animal: Animal;
-  observacoes: string[] = [];
-  dataCriacao: Date;
-  peso: number;
-  diagnostico?: string;
-  prescricao?: string;
+export class Prontuario implements Impressivel, Notificavel {
+  // 2. Atributos privados para garantir o encapsulamento
+  private _id: number;
+  private _animal: Animal;
+  private _observacoes: string[] = [];
+  private _dataCriacao: Date;
+  private _peso: number;
+  private _diagnostico?: string;
+  private _prescricao?: string;
 
   constructor(id: number, animal: Animal) {
-    this.id = id;
-    this.animal = animal;
-    this.dataCriacao = new Date();
-    this.peso = animal.peso;
+    this._id = id;
+    this._animal = animal;
+    this._dataCriacao = new Date();
+    this._peso = animal.peso; // Puxa pelo getter seguro do Animal
   }
 
-  registrar(): void {
-    console.log("Prontuário #" + this.id + " registrado.");
-  }
+  // Getters e Setters
+  get id(): number { return this._id; }
+  get animal(): Animal { return this._animal; }
+  get dataCriacao(): Date { return this._dataCriacao; }
+  get peso(): number { return this._peso; }
 
-  atualizar(): void {
-    console.log("Prontuário atualizado.");
-  }
+  // Retorna uma cópia segura do array de observações
+  get observacoes(): string[] { return [...this._observacoes]; }
 
-  deletar(): void {
-  }
+  get diagnostico(): string | undefined { return this._diagnostico; }
+  set diagnostico(diag: string | undefined) { this._diagnostico = diag; }
 
-  imprimir(): void {
-    console.log(
-      "Prontuário #" +
-        this.id +
-        " | Animal: " +
-        this.animal.nome +
-        " | Diagnóstico: " +
-        this.diagnostico
-    );
-  }
+  get prescricao(): string | undefined { return this._prescricao; }
+  set prescricao(presc: string | undefined) { this._prescricao = presc; }
 
-  exportarCSV(): void {
-
-  }
-
-  enviarEmail(): void {
-    console.log(
-      "Enviando prontuário por email para " + this.animal.nomeDono
-    );
-  }
-
+  // Controle controlado de mutação do array
   adicionarObservacao(obs: string): void {
-    this.observacoes.push(obs);
+    if (!obs || obs.trim().length === 0) throw new Error("A observação não pode ser vazia.");
+    this._observacoes.push(obs);
+  }
+
+  // Cumprindo a interface de forma limpa, sem console.log rígido
+  obterTextoFormatado(): string {
+    return `Prontuário #${this._id} | Animal: ${this._animal.nome} | Diagnóstico: ${this._diagnostico ?? "Não informado"}`;
+  }
+
+  // Mantido para não quebrar o Main.ts original, mas com aviso conceitual
+  enviarEmail(): void {
+    // Nota: Em uma arquitetura real, isso invocaria um EmailService externo
+    console.log(`Enviando prontuário por email para ${this._animal.nomeDono}`);
   }
 }
